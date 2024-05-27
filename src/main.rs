@@ -12,7 +12,6 @@ async fn main() {
     )
     .await
     .unwrap();
-    let _ = "gush jfre".split(" ");
 
     let channels = vec!["table_update"];
 

@@ -9,6 +9,7 @@ use sqlx::postgres::PgListener;
 use sqlx::Pool;
 use sqlx::Postgres;
 
+// An enum representing the types of database actions.
 #[derive(Deserialize, Debug)]
 pub enum ActionType {
     INSERT,
@@ -16,6 +17,11 @@ pub enum ActionType {
     DELETE,
 }
 
+// A struct representing the payload of a notification.
+// @table: The table name in the database.
+// @action_type: The type of action (using the ActionType enum).
+// @key: The key of the affected data.
+// @value: The value of the affected data.
 #[derive(Deserialize, Debug)]
 pub struct Payload {
     pub table: String,
@@ -24,6 +30,10 @@ pub struct Payload {
     pub value: String,
 }
 
+// Listens to notifications from PostgreSQL channels.
+// @pool: A reference to a connection pool for PostgreSQL.
+// @channels: A vector of channel names to listen to.
+// @call_back: A callback function to handle the deserialized payload.
 pub async fn start_listening<T: DeserializeOwned + Sized + Debug>(
     pool: &Pool<Postgres>,
     channels: Vec<&str>,
@@ -32,7 +42,7 @@ pub async fn start_listening<T: DeserializeOwned + Sized + Debug>(
     // Initiate the logger.
     env_logger::init();
 
-    let mut listener = PgListener::connect_with(pool).await.unwrap();
+    let mut listener: PgListener = PgListener::connect_with(pool).await.unwrap();
     listener.listen_all(channels).await?;
     loop {
         while let Some(notification) = listener.try_recv().await? {
