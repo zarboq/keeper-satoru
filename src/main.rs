@@ -13,16 +13,16 @@ async fn main() {
     .await
     .unwrap();
 
-    let channels = vec!["table_update"];
+    let channels: Vec<&str> = vec!["table_update"];
 
     let hm: HashMap<String, String> = HashMap::new();
-    let constants = Arc::new(RwLock::new(hm));
+    let constants: Arc<RwLock<HashMap<String, String>>> = Arc::new(RwLock::new(hm));
 
     let call_back = |payload: Payload| {
         match payload.action_type {
             ActionType::INSERT => {
                 let mut constants = constants.write().unwrap();
-                constants.insert(payload.key, payload.value);
+                // constants.insert(payload.key, payload.value);
             }
             ActionType::UPDATE => {
                 let mut constants = constants.write().unwrap();
