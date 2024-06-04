@@ -1,32 +1,90 @@
+\c zohal
+
+CREATE TABLE IF NOT EXISTS orders (
+    block_number BIGINT NOT NULL,
+    transaction_hash TEXT NOT NULL,
+    key TEXT,
+    order_type TEXT,
+    decrease_position_swap_type TEXT,
+    account TEXT,
+    receiver TEXT,
+    callback_contract TEXT,
+    ui_fee_receiver TEXT,
+    market TEXT,
+    initial_collateral_token TEXT,
+    swap_path TEXT,
+    size_delta_usd BIGINT,
+    initial_collateral_delta_amount BIGINT,
+    trigger_price BIGINT,
+    acceptable_price BIGINT,
+    execution_fee BIGINT,
+    callback_gas_limit BIGINT,
+    min_output_amount BIGINT,
+    updated_at_block BIGINT,
+    is_long BOOLEAN,
+    is_frozen BOOLEAN
+);
+CREATE TABLE IF NOT EXISTS deposits (
+    block_number BIGINT NOT NULL,
+    transaction_hash TEXT NOT NULL,
+    key TEXT,
+    account TEXT,
+    receiver TEXT,
+    callback_contract TEXT,
+    market TEXT,
+    initial_long_token TEXT,
+    initial_short_token TEXT,
+    long_token_swap_path TEXT,
+    short_token_swap_path TEXT,
+    initial_long_token_amount BIGINT,
+    initial_short_token_amount BIGINT,
+    min_market_tokens BIGINT,
+    updated_at_block BIGINT,
+    execution_fee BIGINT,
+    callback_gas_limit BIGINT
+);
+CREATE TABLE IF NOT EXISTS withdrawals (
+    block_number BIGINT NOT NULL,
+    transaction_hash TEXT NOT NULL,
+    key TEXT,
+    account TEXT,
+    receiver TEXT,
+    callback_contract TEXT,
+    market TEXT,
+    long_token_swap_path TEXT,
+    short_token_swap_path TEXT,
+    market_token_amount BIGINT,
+    min_long_token_amount BIGINT,
+    min_short_token_amount BIGINT,
+    updated_at_block BIGINT,
+    execution_fee BIGINT,
+    callback_gas_limit BIGINT
+);
+
+
 -- Add a table update notification function
-CREATE OR REPLACE FUNCTION table_update_notify() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION orders_update_notify() RETURNS trigger AS $$
 DECLARE
-  id int;
-  key varchar;
-  value varchar;
+  payload json;
 BEGIN
   IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
-    id = NEW.id;
-    key = NEW.key;
-    value = NEW.val;
+    payload = row_to_json(NEW);
   ELSE
-    id = OLD.id;
-    key = OLD.key;
-    value = OLD.val;
+    payload = row_to_json(OLD);
   END IF;
-  PERFORM pg_notify('table_update', json_build_object('table', TG_TABLE_NAME, 'id', id, 'key', key, 'value', value, 'action_type', TG_OP)::text);
+  PERFORM pg_notify('order_update', json_build_object('table', TG_TABLE_NAME, 'action_type', TG_OP, 'row_data', payload)::text);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 -- Add UPDATE row trigger
-DROP TRIGGER users_notify_update ON my_table;
-CREATE TRIGGER users_notify_update AFTER UPDATE ON my_table FOR EACH ROW EXECUTE PROCEDURE table_update_notify();
+DROP TRIGGER IF EXISTS orders_notify_update ON orders;
+CREATE TRIGGER orders_notify_update AFTER UPDATE ON orders FOR EACH ROW EXECUTE PROCEDURE orders_update_notify();
 
 -- Add INSERT row trigger
-DROP TRIGGER users_notify_insert ON my_table;
-CREATE TRIGGER users_notify_insert AFTER INSERT ON my_table FOR EACH ROW EXECUTE PROCEDURE table_update_notify();
+DROP TRIGGER IF EXISTS orders_notify_insert ON orders;
+CREATE TRIGGER orders_notify_insert AFTER INSERT ON orders FOR EACH ROW EXECUTE PROCEDURE orders_update_notify();
 
 -- Add DELETE row trigger
-DROP TRIGGER users_notify_delete ON my_table;
-CREATE TRIGGER users_notify_delete AFTER DELETE ON my_table FOR EACH ROW EXECUTE PROCEDURE table_update_notify();
+DROP TRIGGER IF EXISTS orders_notify_delete ON orders;
+CREATE TRIGGER orders_notify_delete AFTER DELETE ON orders FOR EACH ROW EXECUTE PROCEDURE orders_update_notify();

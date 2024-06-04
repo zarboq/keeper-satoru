@@ -8,7 +8,7 @@ use keeper_satoru::listen_db::{start_listening, Payload, ActionType};
 #[tokio::main]
 async fn main() {
     let pool = sqlx::PgPool::connect(
-        "postgres://passforyourbot:passforyourbot@localhost:5432/passforyourbot",
+        "postgres://postgres:123@localhost:5432/zohal",
     )
     .await
     .unwrap();
@@ -22,7 +22,7 @@ async fn main() {
         match payload.action_type {
             ActionType::INSERT => {
                 let mut constants = constants.write().unwrap();
-                // constants.insert(payload.key, payload.value);
+                constants.insert(payload.key, payload.value);
             }
             ActionType::UPDATE => {
                 let mut constants = constants.write().unwrap();
