@@ -1,9 +1,8 @@
 use std::{
     collections::HashMap,
-    sync::{Arc, RwLock},
 };
 
-use keeper_satoru::listen_db::{start_listening, Payload, ActionType};
+use keeper_satoru::{listen_db::{start_listening, ActionType}, order::types::PayloadOrder};
 
 #[tokio::main]
 async fn main() {
@@ -13,29 +12,21 @@ async fn main() {
     .await
     .unwrap();
 
-    let channels: Vec<&str> = vec!["table_update"];
+    let channels: Vec<&str> = vec!["order_update"];
 
     let hm: HashMap<String, String> = HashMap::new();
-    let constants: Arc<RwLock<HashMap<String, String>>> = Arc::new(RwLock::new(hm));
 
-    let call_back = |payload: Payload| {
+    let call_back = |payload: PayloadOrder| {
         match payload.action_type {
             ActionType::INSERT => {
-                let mut constants = constants.write().unwrap();
-                constants.insert(payload.key, payload.value);
             }
             ActionType::UPDATE => {
-                let mut constants = constants.write().unwrap();
-                constants.insert(payload.key, payload.value);
             }
             ActionType::DELETE => {
-                let mut constants = constants.write().unwrap();
-                constants.remove(&payload.key);
             }
         };
-        println!("constants: {:?}", constants);
-        println!(" ");
     };
+    println!("Keeper connected to DB and listening...");
 
     let _ = start_listening(&pool, channels, call_back).await;
 }

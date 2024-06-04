@@ -9,25 +9,14 @@ use sqlx::postgres::PgListener;
 use sqlx::Pool;
 use sqlx::Postgres;
 
+use crate::order::types::RowDataOrder;
+
 // An enum representing the types of database actions.
 #[derive(Deserialize, Debug)]
 pub enum ActionType {
     INSERT,
     UPDATE,
     DELETE,
-}
-
-// A struct representing the payload of a notification.
-// @table: The table name in the database.
-// @action_type: The type of action (using the ActionType enum).
-// @key: The key of the affected data.
-// @value: The value of the affected data.
-#[derive(Deserialize, Debug)]
-pub struct Payload {
-    pub table: String,
-    pub action_type: ActionType,
-    pub key: String,
-    pub value: String,
 }
 
 // Listens to notifications from PostgreSQL channels.
@@ -42,7 +31,7 @@ pub async fn start_listening<T: DeserializeOwned + Sized + Debug>(
     // Initiate the logger.
     env_logger::init();
 
-    let mut listener: PgListener = PgListener::connect_with(pool).await.unwrap();
+    let mut listener: PgListener = PgListener::connect_with(pool).await.expect("Could not connect to pool.");
     listener.listen_all(channels).await?;
     loop {
         while let Some(notification) = listener.try_recv().await? {
@@ -53,9 +42,9 @@ pub async fn start_listening<T: DeserializeOwned + Sized + Debug>(
             );
 
             let strr = notification.payload().to_owned();
-            let payload: T = serde_json::from_str::<T>(&strr).unwrap();
-            info!("des payload is {:?}", payload);
-
+            let payload: T = serde_json::from_str::<T>(&strr).expect("Could not decode payload.");
+            info!("Payload {:?}", payload);
+            
             call_back(payload);
         }
     }

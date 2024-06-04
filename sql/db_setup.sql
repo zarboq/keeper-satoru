@@ -61,6 +61,12 @@ CREATE TABLE IF NOT EXISTS withdrawals (
     callback_gas_limit BIGINT
 );
 
+-- Drop the existing function and triggers if it exists
+DROP TRIGGER IF EXISTS orders_notify_update ON orders;
+DROP TRIGGER IF EXISTS orders_notify_insert ON orders;
+DROP TRIGGER IF EXISTS orders_notify_delete ON orders;
+
+DROP FUNCTION IF EXISTS orders_update_notify();
 
 -- Add a table update notification function
 CREATE OR REPLACE FUNCTION orders_update_notify() RETURNS trigger AS $$
@@ -78,13 +84,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Add UPDATE row trigger
-DROP TRIGGER IF EXISTS orders_notify_update ON orders;
 CREATE TRIGGER orders_notify_update AFTER UPDATE ON orders FOR EACH ROW EXECUTE PROCEDURE orders_update_notify();
 
 -- Add INSERT row trigger
-DROP TRIGGER IF EXISTS orders_notify_insert ON orders;
 CREATE TRIGGER orders_notify_insert AFTER INSERT ON orders FOR EACH ROW EXECUTE PROCEDURE orders_update_notify();
 
 -- Add DELETE row trigger
-DROP TRIGGER IF EXISTS orders_notify_delete ON orders;
 CREATE TRIGGER orders_notify_delete AFTER DELETE ON orders FOR EACH ROW EXECUTE PROCEDURE orders_update_notify();
