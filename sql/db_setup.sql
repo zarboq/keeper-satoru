@@ -64,7 +64,6 @@ CREATE TABLE IF NOT EXISTS withdrawals (
 -- Drop the existing function and triggers if it exists
 DROP TRIGGER IF EXISTS orders_notify_update ON orders;
 DROP TRIGGER IF EXISTS orders_notify_insert ON orders;
-DROP TRIGGER IF EXISTS orders_notify_delete ON orders;
 
 DROP FUNCTION IF EXISTS orders_update_notify();
 
@@ -78,7 +77,7 @@ BEGIN
   ELSE
     payload = row_to_json(OLD);
   END IF;
-  PERFORM pg_notify('order_update', json_build_object('table', TG_TABLE_NAME, 'action_type', TG_OP, 'row_data', payload)::text);
+  PERFORM pg_notify('orders_update', json_build_object('table', TG_TABLE_NAME, 'action_type', TG_OP, 'row_data', payload)::text);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -89,5 +88,29 @@ CREATE TRIGGER orders_notify_update AFTER UPDATE ON orders FOR EACH ROW EXECUTE 
 -- Add INSERT row trigger
 CREATE TRIGGER orders_notify_insert AFTER INSERT ON orders FOR EACH ROW EXECUTE PROCEDURE orders_update_notify();
 
--- Add DELETE row trigger
-CREATE TRIGGER orders_notify_delete AFTER DELETE ON orders FOR EACH ROW EXECUTE PROCEDURE orders_update_notify();
+-- Drop the existing function and triggers if it exists
+DROP TRIGGER IF EXISTS withdrawals_notify_update ON withdrawals;
+DROP TRIGGER IF EXISTS withdrawals_notify_insert ON withdrawals;
+
+DROP FUNCTION IF EXISTS withdrawals_update_notify();
+
+-- Add a table update notification function
+CREATE OR REPLACE FUNCTION withdrawals_update_notify() RETURNS trigger AS $$
+DECLARE
+  payload json;
+BEGIN
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+    payload = row_to_json(NEW);
+  ELSE
+    payload = row_to_json(OLD);
+  END IF;
+  PERFORM pg_notify('withdrawals_update', json_build_object('table', TG_TABLE_NAME, 'action_type', TG_OP, 'row_data', payload)::text);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Add UPDATE row trigger
+CREATE TRIGGER withdrawals_notify_update AFTER UPDATE ON withdrawals FOR EACH ROW EXECUTE PROCEDURE withdrawals_update_notify();
+
+-- Add INSERT row trigger
+CREATE TRIGGER withdrawals_notify_insert AFTER INSERT ON withdrawals FOR EACH ROW EXECUTE PROCEDURE withdrawals_update_notify();
