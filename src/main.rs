@@ -1,8 +1,4 @@
-use std::{
-    collections::HashMap,
-};
-
-use keeper_satoru::{listen_db::{start_listening, ActionType}, order::types::PayloadOrder};
+use keeper_satoru::{listen_db::start_listening, types::{ActionType, Payload}};
 
 #[tokio::main]
 async fn main() {
@@ -12,19 +8,39 @@ async fn main() {
     .await
     .unwrap();
 
-    let channels: Vec<&str> = vec!["order_update"];
+    let channels: Vec<&str> = vec!["orders_update", "deposits_update", "withdrawals_update"];
 
-    let hm: HashMap<String, String> = HashMap::new();
+    let call_back = |payload: Payload| {
+        println!("{:?}", payload.row_data);
+        match payload.table.as_str() {
+            "orders" => {
+                match payload.action_type {
+                    ActionType::INSERT => {
+                    }
+                    ActionType::UPDATE => {
+                    }
+                }
+            }
+            "deposits" => {
+                match payload.action_type {
+                    ActionType::INSERT => {
+                    }
+                    ActionType::UPDATE => {
+                    }
+                }
+            }
+            "withdrawals" => {
+                match payload.action_type {
+                    ActionType::INSERT => {
+                    }
+                    ActionType::UPDATE => {
+                    }
+                }
+            }
+            &_ => {
 
-    let call_back = |payload: PayloadOrder| {
-        match payload.action_type {
-            ActionType::INSERT => {
             }
-            ActionType::UPDATE => {
-            }
-            ActionType::DELETE => {
-            }
-        };
+        }
     };
     println!("Keeper connected to DB and listening...");
 

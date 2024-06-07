@@ -1,23 +1,11 @@
 use std::fmt::Debug;
 
-use serde::Deserialize;
-
 use log::info;
 use serde::de::DeserializeOwned;
 use sqlx::error::Error;
 use sqlx::postgres::PgListener;
 use sqlx::Pool;
 use sqlx::Postgres;
-
-use crate::order::types::RowDataOrder;
-
-// An enum representing the types of database actions.
-#[derive(Deserialize, Debug)]
-pub enum ActionType {
-    INSERT,
-    UPDATE,
-    DELETE,
-}
 
 // Listens to notifications from PostgreSQL channels.
 // @pool: A reference to a connection pool for PostgreSQL.

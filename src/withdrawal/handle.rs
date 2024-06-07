@@ -11,9 +11,7 @@ use starknet::{
     signers::LocalWallet,
 };
 
-use super::types::Withdrawal;
-
-// Local imports.
+use crate::types::SatoruAction;
 
 abigen!(
     WithdrawalHandler,
@@ -22,7 +20,7 @@ abigen!(
 
 async fn handle_withdrawal(
     account: SingleOwnerAccount<JsonRpcClient<HttpTransport>, LocalWallet>,
-    withdrawal: Withdrawal,
+    withdrawal: SatoruAction,
 ) {
     let withdrawal_handler_address =
         env::var("WITHDRAWAL_HANDLER").expect("WITHDRAWAL_HANDLER env variable not set");
@@ -70,7 +68,7 @@ async fn handle_withdrawal(
     };
 
     let tx = withdrawal_handler
-        .execute_withdrawal(&withdrawal.key, &set_prices_params)
+        .execute_withdrawal(&FieldElement::from_hex_be(&withdrawal.key).expect("Cannot convert string to felt"), &set_prices_params)
         .send()
         .await
         .expect("Withdrawal Execution Failed");

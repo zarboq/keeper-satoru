@@ -11,9 +11,7 @@ use starknet::{
     signers::LocalWallet,
 };
 
-use super::types::Deposit;
-
-// Local imports.
+use crate::types::SatoruAction;
 
 abigen!(
     DepositHandler,
@@ -22,7 +20,7 @@ abigen!(
 
 async fn handle_deposit(
     account: SingleOwnerAccount<JsonRpcClient<HttpTransport>, LocalWallet>,
-    deposit: Deposit,
+    deposit: SatoruAction,
 ) {
     let deposit_handler_address =
         env::var("DEPOSIT_HANDLER").expect("DEPOSIT_HANDLER env variable not set");
@@ -70,7 +68,7 @@ async fn handle_deposit(
     };
 
     let tx = deposit_handler
-        .execute_deposit(&deposit.key, &set_prices_params)
+        .execute_deposit(&FieldElement::from_hex_be(&deposit.key).expect("Cannot convert string to felt"), &set_prices_params)
         .send()
         .await
         .expect("Deposit Execution Failed");

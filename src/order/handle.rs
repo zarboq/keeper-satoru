@@ -11,9 +11,7 @@ use starknet::{
     signers::LocalWallet,
 };
 
-use super::types::Order;
-
-// Local imports.
+use crate::types::SatoruAction;
 
 abigen!(
     OrderHandler,
@@ -22,7 +20,7 @@ abigen!(
 
 async fn handle_order(
     account: SingleOwnerAccount<JsonRpcClient<HttpTransport>, LocalWallet>,
-    order: Order,
+    order: SatoruAction,
 ) {
     let order_handler_address =
         env::var("ORDER_HANDLER").expect("ORDER_HANDLER env variable not set");
@@ -70,7 +68,7 @@ async fn handle_order(
     };
 
     let tx = order_handler
-        .execute_order(&order.key, &set_prices_params)
+        .execute_order(&FieldElement::from_hex_be(&order.key).expect("Cannot convert string to felt"), &set_prices_params)
         .send()
         .await
         .expect("Order Execution Failed");
